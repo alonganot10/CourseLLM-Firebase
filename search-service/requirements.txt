@@ -4,3 +4,5 @@ bm25s
 PyStemmer
 pytest
 httpx
+firebase-admin
+pydantic-settings
