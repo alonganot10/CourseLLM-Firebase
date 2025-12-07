@@ -26,9 +26,7 @@ export default function StudentDashboard() {
     <div className="space-y-6">
       <div className="space-y-1">
         <h1 className="text-3xl font-bold font-headline">Student Dashboard</h1>
-        <p className="text-muted-foreground">
-          Welcome back, Alex! Here are your current courses.
-        </p>
+        <p className="text-muted-foreground">Welcome back, Alex! Here are your current courses.</p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

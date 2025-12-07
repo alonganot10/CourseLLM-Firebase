@@ -1,0 +1,294 @@
+/**
+ * @fileoverview Firestore Security Rules for the application.
+ *
+ * Core Philosophy:
+ * This ruleset enforces a strict user-ownership model, ensuring that users (teachers and students) can only access their own data.
+ *
+ * Data Structure:
+ * The Firestore data is organized hierarchically, with data nested under user-specific paths (e.g., /teachers/{teacherId}, /students/{studentId}).
+ * Each teacher has courses, materials, learning objectives, and learning skills.
+ * Each student has learning trajectories, chat messages, assessments, and usage reports.
+ *
+ * Key Security Decisions:
+ * - User listing is disallowed to prevent unauthorized access to user data.
+ * - All write operations are protected by authorization checks based on path-based ownership.
+ * - Data validation is relaxed to allow for rapid prototyping but critical relational integrity checks are enforced.
+ *
+ * Denormalization for Authorization:
+ * The data structure is explicitly designed to avoid `get()` calls in security rules. Ownership is derived from the path.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * @description Enforces that only the teacher can read and write their own profile data.
+     * @path /teachers/{teacherId}
+     * @allow (create, update, delete) User with UID 'teacher123' can create/update/delete their own profile at /teachers/teacher123.
+     * @deny (create, update, delete) User with UID 'student456' cannot create/update/delete a teacher profile at /teachers/teacher123.
+     * @principle Enforces document ownership for writes.
+     */
+    match /teachers/{teacherId} {
+      function isSignedIn() {
+        return request.auth != null;
+      }
+
+      function isOwner(teacherId) {
+        return isSignedIn() && request.auth.uid == teacherId;
+      }
+
+      function isExistingOwner(teacherId) {
+        return isOwner(teacherId) && resource != null;
+      }
+
+      allow get: if isOwner(teacherId);
+      allow list: if false; // Prevent listing of all teachers.
+      allow create: if isOwner(teacherId);
+      allow update: if isExistingOwner(teacherId);
+      allow delete: if isExistingOwner(teacherId);
+    }
+
+    /**
+     * @description Enforces that only the teacher can read and write courses under their profile.
+     * @path /teachers/{teacherId}/courses/{courseId}
+     * @allow (create, update, delete) Teacher with UID 'teacher123' can create/update/delete a course under /teachers/teacher123/courses/course001.
+     * @deny (create, update, delete) Teacher with UID 'teacher456' cannot create/update/delete a course under /teachers/teacher123/courses/course001.
+     * @principle Enforces document ownership for writes.
+     */
+    match /teachers/{teacherId}/courses/{courseId} {
+        function isSignedIn() {
+            return request.auth != null;
+        }
+
+        function isOwner(teacherId) {
+            return isSignedIn() && request.auth.uid == teacherId;
+        }
+
+        function isExistingOwner(teacherId) {
+            return isOwner(teacherId) && resource != null;
+        }
+
+        allow get: if isOwner(teacherId);
+        allow list: if isOwner(teacherId);
+        allow create: if isOwner(teacherId) && request.resource.data.teacherId == teacherId;
+        allow update: if isExistingOwner(teacherId) && request.resource.data.teacherId == resource.data.teacherId;
+        allow delete: if isExistingOwner(teacherId);
+    }
+
+    /**
+     * @description Enforces that only the teacher can read and write course materials under their courses.
+     * @path /teachers/{teacherId}/courses/{courseId}/materials/{materialId}
+     * @allow (create, update, delete) Teacher with UID 'teacher123' can create/update/delete material under /teachers/teacher123/courses/course001/materials/material001.
+     * @deny (create, update, delete) Teacher with UID 'teacher456' cannot create/update/delete material under /teachers/teacher123/courses/course001/materials/material001.
+     * @principle Enforces document ownership for writes.
+     */
+    match /teachers/{teacherId}/courses/{courseId}/materials/{materialId} {
+        function isSignedIn() {
+            return request.auth != null;
+        }
+
+        function isOwner(teacherId) {
+            return isSignedIn() && request.auth.uid == teacherId;
+        }
+
+        function isExistingOwner(teacherId) {
+            return isOwner(teacherId) && resource != null;
+        }
+
+        allow get: if isOwner(teacherId);
+        allow list: if isOwner(teacherId);
+        allow create: if isOwner(teacherId);
+        allow update: if isExistingOwner(teacherId);
+        allow delete: if isExistingOwner(teacherId);
+    }
+
+    /**
+     * @description Enforces that only the teacher can read and write learning objectives under their courses.
+     * @path /teachers/{teacherId}/courses/{courseId}/learningObjectives/{learningObjectiveId}
+     * @allow (create, update, delete) Teacher with UID 'teacher123' can create/update/delete learning objective under /teachers/teacher123/courses/course001/learningObjectives/objective001.
+     * @deny (create, update, delete) Teacher with UID 'teacher456' cannot create/update/delete learning objective under /teachers/teacher123/courses/course001/learningObjectives/objective001.
+     * @principle Enforces document ownership for writes.
+     */
+    match /teachers/{teacherId}/courses/{courseId}/learningObjectives/{learningObjectiveId} {
+        function isSignedIn() {
+            return request.auth != null;
+        }
+
+        function isOwner(teacherId) {
+            return isSignedIn() && request.auth.uid == teacherId;
+        }
+
+        function isExistingOwner(teacherId) {
+            return isOwner(teacherId) && resource != null;
+        }
+
+        allow get: if isOwner(teacherId);
+        allow list: if isOwner(teacherId);
+        allow create: if isOwner(teacherId);
+        allow update: if isExistingOwner(teacherId);
+        allow delete: if isExistingOwner(teacherId);
+    }
+
+    /**
+     * @description Enforces that only the teacher can read and write learning skills under their learning objectives.
+     * @path /teachers/{teacherId}/courses/{courseId}/learningObjectives/{learningObjectiveId}/learningSkills/{learningSkillId}
+     * @allow (create, update, delete) Teacher with UID 'teacher123' can create/update/delete learning skill under /teachers/teacher123/courses/course001/learningObjectives/objective001/learningSkills/skill001.
+     * @deny (create, update, delete) Teacher with UID 'teacher456' cannot create/update/delete learning skill under /teachers/teacher123/courses/course001/learningObjectives/objective001/learningSkills/skill001.
+     * @principle Enforces document ownership for writes.
+     */
+    match /teachers/{teacherId}/courses/{courseId}/learningObjectives/{learningObjectiveId}/learningSkills/{learningSkillId} {
+        function isSignedIn() {
+            return request.auth != null;
+        }
+
+        function isOwner(teacherId) {
+            return isSignedIn() && request.auth.uid == teacherId;
+        }
+
+        function isExistingOwner(teacherId) {
+            return isOwner(teacherId) && resource != null;
+        }
+
+        allow get: if isOwner(teacherId);
+        allow list: if isOwner(teacherId);
+        allow create: if isOwner(teacherId);
+        allow update: if isExistingOwner(teacherId);
+        allow delete: if isExistingOwner(teacherId);
+    }
+
+    /**
+     * @description Enforces that only the student can read and write their own profile data.
+     * @path /students/{studentId}
+     * @allow (create, update, delete) User with UID 'student456' can create/update/delete their own profile at /students/student456.
+     * @deny (create, update, delete) User with UID 'teacher123' cannot create/update/delete a student profile at /students/student456.
+     * @principle Enforces document ownership for writes.
+     */
+    match /students/{studentId} {
+      function isSignedIn() {
+        return request.auth != null;
+      }
+
+      function isOwner(studentId) {
+        return isSignedIn() && request.auth.uid == studentId;
+      }
+
+      function isExistingOwner(studentId) {
+        return isOwner(studentId) && resource != null;
+      }
+
+      allow get: if isOwner(studentId);
+      allow list: if false; // Prevent listing of all students.
+      allow create: if isOwner(studentId);
+      allow update: if isExistingOwner(studentId);
+      allow delete: if isExistingOwner(studentId);
+    }
+
+    /**
+     * @description Enforces that only the student can read and write learning trajectories under their profile.
+     * @path /students/{studentId}/courses/{courseId}/learningTrajectories/{learningTrajectoryId}
+     * @allow (create, update, delete) Student with UID 'student456' can create/update/delete a learning trajectory under /students/student456/courses/course001/learningTrajectories/trajectory001.
+     * @deny (create, update, delete) Student with UID 'teacher123' cannot create/update/delete a learning trajectory under /students/student456/courses/course001/learningTrajectories/trajectory001.
+     * @principle Enforces document ownership for writes.
+     */
+    match /students/{studentId}/courses/{courseId}/learningTrajectories/{learningTrajectoryId} {
+        function isSignedIn() {
+            return request.auth != null;
+        }
+
+        function isOwner(studentId) {
+            return isSignedIn() && request.auth.uid == studentId;
+        }
+
+        function isExistingOwner(studentId) {
+            return isOwner(studentId) && resource != null;
+        }
+
+        allow get: if isOwner(studentId);
+        allow list: if isOwner(studentId);
+        allow create: if isOwner(studentId) && request.resource.data.studentId == studentId;
+        allow update: if isExistingOwner(studentId) && request.resource.data.studentId == resource.data.studentId;
+        allow delete: if isExistingOwner(studentId);
+    }
+
+    /**
+     * @description Enforces that only the student can read and write chat messages under their profile.
+     * @path /students/{studentId}/courses/{courseId}/chatMessages/{chatMessageId}
+     * @allow (create, update, delete) Student with UID 'student456' can create/update/delete a chat message under /students/student456/courses/course001/chatMessages/message001.
+     * @deny (create, update, delete) Student with UID 'teacher123' cannot create/update/delete a chat message under /students/student456/courses/course001/chatMessages/message001.
+     * @principle Enforces document ownership for writes.
+     */
+    match /students/{studentId}/courses/{courseId}/chatMessages/{chatMessageId} {
+        function isSignedIn() {
+            return request.auth != null;
+        }
+
+        function isOwner(studentId) {
+            return isSignedIn() && request.auth.uid == studentId;
+        }
+
+        function isExistingOwner(studentId) {
+            return isOwner(studentId) && resource != null;
+        }
+
+        allow get: if isOwner(studentId);
+        allow list: if isOwner(studentId);
+        allow create: if isOwner(studentId) && request.resource.data.studentId == studentId;
+        allow update: if isExistingOwner(studentId) && request.resource.data.studentId == resource.data.studentId;
+        allow delete: if isExistingOwner(studentId);
+    }
+
+    /**
+     * @description Enforces that only the student can read and write assessments under their profile.
+     * @path /students/{studentId}/courses/{courseId}/assessments/{assessmentId}
+     * @allow (create, update, delete) Student with UID 'student456' can create/update/delete an assessment under /students/student456/courses/course001/assessments/assessment001.
+     * @deny (create, update, delete) Student with UID 'teacher123' cannot create/update/delete an assessment under /students/student456/courses/course001/assessments/assessment001.
+     * @principle Enforces document ownership for writes.
+     */
+    match /students/{studentId}/courses/{courseId}/assessments/{assessmentId} {
+        function isSignedIn() {
+            return request.auth != null;
+        }
+
+        function isOwner(studentId) {
+            return isSignedIn() && request.auth.uid == studentId;
+        }
+
+        function isExistingOwner(studentId) {
+            return isOwner(studentId) && resource != null;
+        }
+
+        allow get: if isOwner(studentId);
+        allow list: if isOwner(studentId);
+        allow create: if isOwner(studentId) && request.resource.data.studentId == studentId;
+        allow update: if isExistingOwner(studentId) && request.resource.data.studentId == resource.data.studentId;
+        allow delete: if isExistingOwner(studentId);
+    }
+
+    /**
+     * @description Enforces that only the student can read and write usage reports under their profile.
+     * @path /students/{studentId}/courses/{courseId}/usageReports/{usageReportId}
+     * @allow (create, update, delete) Student with UID 'student456' can create/update/delete a usage report under /students/student456/courses/course001/usageReports/report001.
+     * @deny (create, update, delete) Student with UID 'teacher123' cannot create/update/delete a usage report under /students/student456/courses/course001/usageReports/report001.
+     * @principle Enforces document ownership for writes.
+     */
+    match /students/{studentId}/courses/{courseId}/usageReports/{usageReportId} {
+        function isSignedIn() {
+            return request.auth != null;
+        }
+
+        function isOwner(studentId) {
+            return isSignedIn() && request.auth.uid == studentId;
+        }
+
+        function isExistingOwner(studentId) {
+            return isOwner(studentId) && resource != null;
+        }
+
+        allow get: if isOwner(studentId);
+        allow list: if isOwner(studentId);
+        allow create: if isOwner(studentId) && request.resource.data.studentId == studentId;
+        allow update: if isExistingOwner(studentId) && request.resource.data.studentId == resource.data.studentId;
+        allow delete: if isExistingOwner(studentId);
+    }
+  }
+}

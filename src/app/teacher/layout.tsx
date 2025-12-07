@@ -1,20 +1,6 @@
-import { AppShell } from '@/components/layout/app-shell';
-import {
-  BarChart2,
-  LayoutDashboard,
-  BookOpen,
-} from 'lucide-react';
-
-const teacherNavItems = [
-  { href: '/teacher', label: 'Dashboard', icon: <LayoutDashboard /> },
-  { href: '/teacher/courses', label: 'Courses', icon: <BookOpen /> },
-];
-
-const user = {
-  name: 'Dr. Evelyn Reed',
-  email: 'e.reed@university.edu',
-  avatar: 'https://i.pravatar.cc/150?u=teacher-1',
-};
+import ClientOnly from '@/components/ClientOnly';
+import RoleGuardClient from '@/components/RoleGuardClient';
+import InnerAppShellClient from '@/components/InnerAppShellClient';
 
 export default function TeacherLayout({
   children,
@@ -22,8 +8,12 @@ export default function TeacherLayout({
   children: React.ReactNode;
 }) {
   return (
-    <AppShell navItems={teacherNavItems} user={user}>
-      {children}
-    </AppShell>
+    <ClientOnly>
+      <RoleGuardClient requiredRole="teacher">
+        <InnerAppShellClient role="teacher">
+          {children}
+        </InnerAppShellClient>
+      </RoleGuardClient>
+    </ClientOnly>
   );
 }

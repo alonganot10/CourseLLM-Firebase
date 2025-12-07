@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { CreditCard, LogOut, Settings, User } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/components/AuthProviderClient';
 
 type UserNavProps = {
   user: {
@@ -23,6 +25,8 @@ type UserNavProps = {
 };
 
 export function UserNav({ user }: UserNavProps) {
+  const router = useRouter();
+  const { signOut } = useAuth();
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -54,11 +58,18 @@ export function UserNav({ user }: UserNavProps) {
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <Link href="/">
-            <LogOut className="mr-2 h-4 w-4" />
-            <span>Log out</span>
-          </Link>
+        <DropdownMenuItem
+          onClick={async () => {
+            try {
+              await signOut();
+            } catch (e) {
+              console.error('Error signing out', e);
+            }
+            router.replace('/login');
+          }}
+        >
+          <LogOut className="mr-2 h-4 w-4" />
+          <span>Log out</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

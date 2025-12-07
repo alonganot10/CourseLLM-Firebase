@@ -31,9 +31,7 @@ export default function TeacherDashboard() {
     <div className="space-y-6">
       <div className="space-y-1">
         <h1 className="text-3xl font-bold font-headline">Teacher Dashboard</h1>
-        <p className="text-muted-foreground">
-          Welcome, Dr. Reed! Here's an overview of student activity.
-        </p>
+        <p className="text-muted-foreground">Welcome, Dr. Reed! Here's an overview of student activity.</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
