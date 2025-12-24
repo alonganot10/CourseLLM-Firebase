@@ -1,25 +1,12 @@
 import { auth, googleProvider } from "./firebase";
-import { signInWithPopup, signOut, signInWithRedirect } from "firebase/auth";
+import { signInWithRedirect, signOut } from "firebase/auth";
 
 export async function signInWithGoogle() {
   try {
-    const res = await signInWithPopup(auth, googleProvider);
-    return res.user;
+    // Redirect-only Google sign-in (no popup)
+    await signInWithRedirect(auth, googleProvider);
+    // In redirect flow, control won't usually return here; user comes back on a new page load.
   } catch (err: any) {
-    // Some browser environments (strict COOP/COEP, embedded contexts) block cross-window access
-    // which the Firebase popup flow relies on (checking popup.closed). In that case, fall back
-    // to the redirect-based flow which does not require cross-window communication.
-    const msg = err?.message || "";
-    if (/cross-?origin|opener|blocked a frame|window\.closed/i.test(msg)) {
-      console.warn("Popup blocked by Cross-Origin-Opener-Policy or similar, falling back to redirect sign-in.");
-      try {
-        await signInWithRedirect(auth, googleProvider);
-        return null as any; // control will not reach here in redirect flow
-      } catch (redirectErr) {
-        handleAuthError(redirectErr);
-        throw redirectErr;
-      }
-    }
     handleAuthError(err);
     throw err;
   }
@@ -43,7 +30,9 @@ export function handleAuthError(err: any) {
   // Cross-origin opener / popup blocking issues
   const msg = err?.message || "";
   if (/cross-?origin|opener|blocked a frame|window\.closed/i.test(msg)) {
-    console.warn("Popup-based sign-in blocked by browser COOP/COEP or embedding policy. Try enabling third-party cookies or use redirect-based sign-in.");
+    console.warn(
+      "Popup-based sign-in blocked by browser COOP/COEP or embedding policy. Try enabling third-party cookies or use redirect-based sign-in."
+    );
     return;
   }
   console.error("Auth error", err);

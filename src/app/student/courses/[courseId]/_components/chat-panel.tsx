@@ -1,135 +1,156 @@
 "use client";
 
-import { socraticCourseChat } from "@/ai/flows/socratic-course-chat";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import React, { useState } from "react";
+import { useAuth } from "@/components/AuthProviderClient";
+import {
+  sendRagChat,
+  ChatMessage as RagMessage,
+} from "@/lib/ragClient";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { cn } from "@/lib/utils";
-import { Bot, Loader2, Send } from "lucide-react";
-import { useState, useRef, useEffect, useTransition } from "react";
-import type { FormEvent } from "react";
-
-type Message = {
-  role: "user" | "bot";
-  text: string;
-};
+import { Loader2 } from "lucide-react";
 
 type ChatPanelProps = {
+  courseId: string;
+  courseTitle: string;
+  courseDescription: string;
   courseMaterial: string;
 };
 
-export function ChatPanel({ courseMaterial }: ChatPanelProps) {
-  const [messages, setMessages] = useState<Message[]>([]);
+type UiMessage = {
+  role: "user" | "assistant";
+  content: string;
+};
+
+export const ChatPanel: React.FC<ChatPanelProps> = ({
+  courseId,
+  courseTitle,
+  courseDescription,
+  courseMaterial,
+}) => {
+  const { firebaseUser } = useAuth();
+  const [messages, setMessages] = useState<UiMessage[]>([]);
   const [input, setInput] = useState("");
-  const [isPending, startTransition] = useTransition();
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleChatSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!input.trim()) return;
+  async function handleSend(e?: React.FormEvent) {
+    if (e) e.preventDefault();
+    const text = input.trim();
+    if (!text) return;
 
-    const userMessage: Message = { role: "user", text: input };
-    setMessages((prev) => [...prev, userMessage]);
-    setInput("");
-
-    startTransition(async () => {
-        try {
-            const result = await socraticCourseChat({
-                courseMaterial,
-                studentQuestion: input,
-            });
-            const botMessage: Message = { role: "bot", text: result.response };
-            setMessages((prev) => [...prev, botMessage]);
-        } catch (error) {
-            console.error("Error with Socratic chat:", error);
-            const errorMessage: Message = {
-                role: "bot",
-                text: "Sorry, I encountered an error. Please try again.",
-            };
-            setMessages((prev) => [...prev, errorMessage]);
-        }
-    });
-  };
-
-  useEffect(() => {
-    if (scrollAreaRef.current) {
-      scrollAreaRef.current.scrollTo({
-        top: scrollAreaRef.current.scrollHeight,
-        behavior: "smooth",
-      });
+    if (!firebaseUser) {
+      setError("You must be logged in to chat.");
+      return;
     }
-  }, [messages]);
+
+    const nextMessages: UiMessage[] = [
+      ...messages,
+      { role: "user", content: text },
+    ];
+    setMessages(nextMessages);
+    setInput("");
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Build the message history for the RAG service:
+      const ragMessages: RagMessage[] = [
+        {
+          role: "system",
+          content: `You are a helpful teaching assistant for the course "${courseTitle}" (${courseId}). Course description: ${courseDescription}. Use retrieved chunks from the search service as the main source of truth. If the answer is not clearly supported by the context, say you don't know.`,
+        },
+        {
+          role: "system",
+          content: `Additional course materials:\n${courseMaterial.slice(
+            0,
+            4000,
+          )}`,
+        },
+        ...nextMessages.map((m) => ({
+          role: m.role,
+          content: m.content,
+        })),
+      ];
+
+      const resp = await sendRagChat({
+        courseId,
+        studentId: firebaseUser.uid,
+        messages: ragMessages,
+      });
+
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: resp.answer },
+      ]);
+      // If you want, later you can store resp.chunks in state and show "Sources"
+    } catch (err: any) {
+      console.error(err);
+      setError(err?.message ?? "Failed to contact the tutor service.");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
-    <Card className="flex flex-col h-full">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Bot /> Socratic Tutor
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="flex-1 flex flex-col gap-4 overflow-hidden">
-        <ScrollArea className="flex-1 pr-4" ref={scrollAreaRef}>
-          <div className="space-y-4">
-            {messages.map((message, index) => (
+    <div className="flex h-full flex-col rounded-lg border bg-card">
+      <div className="border-b px-4 py-2">
+        <div className="text-sm font-medium">Course tutor</div>
+        <div className="text-xs text-muted-foreground">
+          Ask questions about this course. Answers use your course materials.
+        </div>
+      </div>
+
+      <ScrollArea className="flex-1 px-4 py-3">
+        <div className="space-y-3">
+          {messages.length === 0 && (
+            <p className="text-xs text-muted-foreground">
+              Start by asking about lectures, assignments, or exam topics.
+            </p>
+          )}
+          {messages.map((m, idx) => (
+            <div
+              key={idx}
+              className={`flex ${
+                m.role === "user" ? "justify-end" : "justify-start"
+              }`}
+            >
               <div
-                key={index}
-                className={cn(
-                  "flex items-start gap-3",
-                  message.role === "user" ? "justify-end" : "justify-start"
-                )}
+                className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
+                  m.role === "user"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted"
+                }`}
               >
-                {message.role === "bot" && (
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback><Bot size={20}/></AvatarFallback>
-                  </Avatar>
-                )}
-                <div
-                  className={cn(
-                    "max-w-xs md:max-w-md lg:max-w-lg rounded-lg px-4 py-2",
-                    message.role === "user"
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted"
-                  )}
-                >
-                  <p className="text-sm whitespace-pre-wrap">{message.text}</p>
-                </div>
-                 {message.role === "user" && (
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback>U</AvatarFallback>
-                  </Avatar>
-                )}
+                {m.content}
               </div>
-            ))}
-            {isPending && (
-              <div className="flex items-start gap-3 justify-start">
-                <Avatar className="h-8 w-8">
-                  <AvatarFallback><Bot size={20}/></AvatarFallback>
-                </Avatar>
-                <div className="max-w-xs md:max-w-md lg:max-w-lg rounded-lg px-4 py-2 bg-muted flex items-center">
-                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                </div>
-              </div>
+            </div>
+          ))}
+        </div>
+      </ScrollArea>
+
+      {error && (
+        <div className="px-4 pb-2 text-xs text-red-500">{error}</div>
+      )}
+
+      <form onSubmit={handleSend} className="border-t px-4 py-3 space-y-2">
+        <Textarea
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          rows={2}
+          placeholder="Ask your tutor a question about this course..."
+          disabled={loading}
+        />
+        <div className="flex justify-end gap-2">
+          <Button type="submit" size="sm" disabled={loading || !input.trim()}>
+            {loading && (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             )}
-          </div>
-        </ScrollArea>
-      </CardContent>
-      <CardFooter>
-        <form onSubmit={handleChatSubmit} className="flex w-full items-center space-x-2">
-          <Input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask a question..."
-            disabled={isPending}
-            autoComplete="off"
-          />
-          <Button type="submit" size="icon" disabled={isPending || !input.trim()}>
-            {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-            <span className="sr-only">Send</span>
+            Ask
           </Button>
-        </form>
-      </CardFooter>
-    </Card>
+        </div>
+      </form>
+    </div>
   );
-}
+};
