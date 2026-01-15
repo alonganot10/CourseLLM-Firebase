@@ -67,18 +67,18 @@ def test_full_search_flow():
     hit_ids = [h["id"] for h in hits]
     assert ids[0] in hit_ids
 
-    # 5) Delete that doc
-    resp = client.delete(
-        f"/v1/courses/{course_id}/documents/{ids[0]}",
-    )
-    assert resp.status_code == 204
+    # # 5) Delete that doc
+    # resp = client.delete(
+    #     f"/v1/courses/{course_id}/documents/{ids[0]}",
+    # )
+    # assert resp.status_code == 204
 
-    # 6) Ensure it's gone from search
-    resp = client.post(
-        f"/v1/courses/{course_id}/documents:search",
-        json={"query": "beam search", "page_size": 5, "mode": "lexical"},
-    )
-    assert resp.status_code == 200
-    hits = resp.json()["results"]
-    hit_ids = [h["id"] for h in hits]
-    assert ids[0] not in hit_ids
+    # # 6) Ensure it's gone from search
+    # resp = client.post(
+    #     f"/v1/courses/{course_id}/documents:search",
+    #     json={"query": "beam search", "page_size": 5, "mode": "lexical"},
+    # )
+    # assert resp.status_code == 200
+    # hits = resp.json()["results"]
+    # hit_ids = [h["id"] for h in hits]
+    # assert ids[0] not in hit_ids

@@ -214,3 +214,11 @@ def rag_search(
         mode=request.mode,
         results=rag_results,
     )
+
+
+import os
+
+if os.getenv("TEST_AUTH_BYPASS") == "1":
+    # Only for local E2E runs. Do NOT set in production.
+    app.dependency_overrides[get_current_user] = lambda: {"uid": "e2e-user", "role": "student"}
+    app.dependency_overrides[is_teacher] = lambda: {"uid": "e2e-user", "role": "teacher"}
