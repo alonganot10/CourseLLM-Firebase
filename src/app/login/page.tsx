@@ -1,83 +1,51 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/components/AuthProviderClient"
+import { auth } from "@/lib/firebase"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { LogIn, Loader2 } from "lucide-react"
 
 export default function LoginPage() {
-  const {
-    signInWithGoogle,
-    loading,
-    firebaseUser,
-    refreshProfile,
-    profile,
-    onboardingRequired,
-  } = useAuth()
+  const { signInWithGoogle, loading, firebaseUser, refreshProfile, profile } = useAuth()
   const [navigating, setNavigating] = useState(false)
   const router = useRouter()
 
-  // Decide where a signed-in user should go
-  const sendUserAway = async () => {
-    try {
-      setNavigating(true)
-
-      // Try to use in-memory profile first
-      let p = profile
-
-      // If we don't have it yet, refresh from Firestore
-      if (!p) {
-        p = await refreshProfile()
-      }
-
-      // If onboarding is required or profile/role is missing → onboarding
-      if (onboardingRequired || !p || !p.role) {
-        router.replace("/onboarding")
-        return
-      }
-
-      // Otherwise route by role
-      router.replace(p.role === "teacher" ? "/teacher" : "/student")
-    } catch (err) {
-      console.error("Error deciding post-login route", err)
-      // If anything explodes (Firestore, network, etc.) just send to onboarding
-      router.replace("/onboarding")
+  const gotoAfterAuth = async () => {
+    // Fast path: if profile already in memory use it
+    if (profile && profile.role) {
+      return router.replace(profile.role === "teacher" ? "/teacher" : "/student")
     }
+
+    // Otherwise try to refresh but don't wait long — race against a short timeout
+    const refreshPromise = refreshProfile()
+    const res = await Promise.race([
+      refreshPromise,
+      new Promise<null>((r) => setTimeout(() => r(null), 700)),
+    ])
+
+    if (res && (res as any).role) {
+      return router.replace((res as any).role === "teacher" ? "/teacher" : "/student")
+    }
+
+    // Fallback: optimistic default. RoleGuard will correct if needed.
+    return router.replace("/student")
   }
 
-  // Handle click on "Sign in with Google"
   const handleGoogle = async () => {
     try {
-      setNavigating(true)
-      await signInWithGoogle()
-      // Important:
-      // - For popup-based login, onAuthStateChanged will fire and the effect below
-      //   will call sendUserAway().
-      // - For redirect-based login, this function won't resume; the effect will still
-      //   run after redirect when firebaseUser becomes non-null.
+      setNavigating(true);
+      await signInWithGoogle();
+      // After this, the browser goes to Google and then back.
+      // When it returns, AuthProvider + AuthRedirector will handle navigation.
     } catch (err) {
-      console.error(err)
-      setNavigating(false)
+      setNavigating(false);
+      console.error("Google sign-in failed", err);
     }
-  }
+  };
 
-  // If the user is already signed in (after redirect or reload), don't stay on /login.
-  useEffect(() => {
-    if (loading) return
-
-    if (!firebaseUser) {
-      // Not signed in → stay on login and hide the overlay if it was showing
-      setNavigating(false)
-      return
-    }
-
-    // Signed in → decide where to go
-    void sendUserAway()
-  }, [firebaseUser, loading, onboardingRequired]) // profile changes will be picked up via refreshProfile
-
-  // Note: GitHub sign-in removed — only Google sign-in is supported.
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
