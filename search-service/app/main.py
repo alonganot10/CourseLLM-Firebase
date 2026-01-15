@@ -30,8 +30,9 @@
 #    This is not suitable for production but is acceptable for the current development phase.
 
 from fastapi import FastAPI, HTTPException, Path, Depends
-from typing import Dict, List
+from typing import Dict, List, Optional
 from datetime import datetime
+from pydantic import BaseModel  # <-- NEW: for RAG-specific response models
 
 from .models import (
     BatchCreateRequest,
@@ -154,3 +155,62 @@ def delete_document(
     index.delete(document_id)
 
     return None
+
+
+# -------------------------------------------------------------------
+# RAG-specific retrieval endpoint
+# -------------------------------------------------------------------
+
+class RagSearchResult(BaseModel):
+    """Full chunk payload + score, for use in RAG prompts."""
+    id: str
+    score: float
+    course_id: str
+    source: Optional[str] = None
+    chunk_index: Optional[int] = None
+    title: Optional[str] = None
+    content: str
+    metadata: Optional[dict] = None
+
+
+class RagSearchResponse(BaseModel):
+    query: str
+    mode: str  # reuse SearchRequest.mode for now
+    results: List[RagSearchResult]
+
+
+@app.post("/v1/courses/{course_id}/documents:ragSearch", response_model=RagSearchResponse)
+def rag_search(
+    course_id: str,
+    request: SearchRequest,
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    RAG-oriented retrieval endpoint.
+
+    Same input shape as /documents:search, but returns the *full* chunk content
+    for each hit instead of just a short snippet. This is what the RAG service
+    will call to build its LLM context.
+    """
+    index = get_course_index(course_id)
+    results = index.search(query=request.query, k=request.page_size)
+
+    rag_results = [
+        RagSearchResult(
+            id=doc.id,
+            score=score,
+            course_id=doc.course_id,
+            source=doc.source,
+            chunk_index=doc.chunk_index,
+            title=doc.title,
+            content=doc.content,
+            metadata=doc.metadata,
+        )
+        for doc, score in results
+    ]
+
+    return RagSearchResponse(
+        query=request.query,
+        mode=request.mode,
+        results=rag_results,
+    )
