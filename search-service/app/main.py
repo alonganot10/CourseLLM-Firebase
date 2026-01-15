@@ -46,9 +46,21 @@ from .models import (
 from .index import BM25Index
 from .auth import get_current_user
 from .roles import is_teacher
+from .monitoring import MonitoringMiddleware, monitoring_service
+from .health import router as health_router
 
 
-app = FastAPI()
+app = FastAPI(
+    title="Search Service",
+    description="Document search service with BM25 indexing",
+    version="1.0.0"
+)
+
+# Add monitoring middleware to track all requests
+app.add_middleware(MonitoringMiddleware, monitoring_service=monitoring_service)
+
+# Include health monitoring routes
+app.include_router(health_router)
 
 # In-memory storage for course indices
 # In a production environment, you'd use a persistent database.

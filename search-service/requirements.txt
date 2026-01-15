@@ -6,4 +6,4 @@ pytest
 httpx
 firebase-admin
 pydantic-settings
-
+psutil

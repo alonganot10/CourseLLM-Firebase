@@ -55,3 +55,5 @@ search-service/.venv/
 dataconnect/.dataconnect
 src/dataconnect-generated/
 src/dataconnect-admin-generated/
+
+**/__pycache__/**
