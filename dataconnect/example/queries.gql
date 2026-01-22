@@ -1,0 +1,79 @@
+# CourseLLM example queries
+
+# In a real deployment you'd tighten @auth rules.
+
+query ListCourses @auth(level: USER) {
+  courses {
+    id
+    code
+    title
+    description
+    status
+    teacher {
+      id
+      displayName
+      email
+    }
+  }
+}
+
+query GetCourseById($id: UUID!) @auth(level: USER) {
+  course(id: $id) {
+    id
+    code
+    title
+    description
+    status
+    teacher { id displayName }
+
+    # one-to-many generated field (SourceDocument.course)
+    documents: sourceDocuments_on_course {
+      id
+      title
+      storagePath
+      status
+    }
+  }
+}
+
+query SearchChunksInCourse($courseId: UUID!, $q: String!) @auth(level: USER) {
+  chunks(
+    where: {
+      _and: [
+        { courseId: { eq: $courseId } }
+        { content: { contains: $q } }
+      ]
+    }
+  ) {
+    id
+    courseId
+    documentId
+    chunkIndex
+    title
+    headings
+    source
+    content
+  }
+}
+
+query ListMyTeachingCourses @auth(level: USER) {
+  courses(where: { teacher: { id: { eq_expr: "auth.uid" } } }) {
+    id
+    code
+    title
+    description
+    status
+  }
+}
+
+query ListPublishedCourses
+  @auth(level: USER, insecureReason: "Published courses are intentionally visible to any authenticated user.") {
+  courses(where: { status: { eq: published } }) {
+    id
+    code
+    title
+    description
+    status
+    teacherId
+  }
+}

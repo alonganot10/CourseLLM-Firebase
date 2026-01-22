@@ -1,0 +1,277 @@
+mutation @transaction {
+  # --- Users (IDs should match Firebase Auth UIDs in your project) ---
+  user_insertMany(
+    data: [
+      {
+        id: "b7TwZiAS6ATyAItR1KfqvljB0w33",
+        email: "teacher@test.com",
+        displayName: "Test Teacher",
+        role: teacher
+      },
+      {
+        id: "rWQu1GqYPXUNwf45CO1ULYqK07S2",
+        email: "student@test.com",
+        displayName: "Test Student",
+        role: student
+      }
+    ]
+  )
+
+  # --- Courses ---
+  course_insertMany(
+    data: [
+      {
+        id: "11111111-1111-1111-1111-111111111111",
+        code: "CS204",
+        title: "Data Structures",
+        description: "Trees, hashing, heaps, graphs — and the tradeoffs that matter.",
+        status: published,
+        teacherId: "seed_teacher_uid"
+      },
+      {
+        id: "22222222-2222-2222-2222-222222222222",
+        code: "IR101",
+        title: "Information Retrieval",
+        description: "Inverted indexes, BM25, evaluation metrics, and ranking.",
+        status: published,
+        teacherId: "seed_teacher_uid"
+      },
+      {
+        id: "33333333-3333-3333-3333-333333333333",
+        code: "RAG301",
+        title: "Retrieval Augmented Generation",
+        description: "Chunking, indexing, reranking, grounding, and evals for RAG.",
+        status: published,
+        teacherId: "seed_teacher_uid"
+      }
+    ]
+  )
+
+  # --- Source Documents ---
+  sourceDocument_insertMany(
+    data: [
+      {
+        id: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1",
+        courseId: "11111111-1111-1111-1111-111111111111",
+        title: "Week 3: Trees and BSTs",
+        storagePath: "seed/CS204/week3_trees.md",
+        status: chunked
+      },
+      {
+        id: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2",
+        courseId: "11111111-1111-1111-1111-111111111111",
+        title: "Week 4: Hash Tables",
+        storagePath: "seed/CS204/week4_hashing.md",
+        status: chunked
+      },
+
+      {
+        id: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1",
+        courseId: "22222222-2222-2222-2222-222222222222",
+        title: "Lecture 2: Inverted Index",
+        storagePath: "seed/IR101/lec2_inverted_index.md",
+        status: chunked
+      },
+      {
+        id: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2",
+        courseId: "22222222-2222-2222-2222-222222222222",
+        title: "Lecture 3: BM25",
+        storagePath: "seed/IR101/lec3_bm25.md",
+        status: chunked
+      },
+
+      {
+        id: "cccccccc-cccc-cccc-cccc-ccccccccccc1",
+        courseId: "33333333-3333-3333-3333-333333333333",
+        title: "Notes: Chunking Strategies",
+        storagePath: "seed/RAG301/chunking.md",
+        status: chunked
+      },
+      {
+        id: "cccccccc-cccc-cccc-cccc-ccccccccccc2",
+        courseId: "33333333-3333-3333-3333-333333333333",
+        title: "Notes: Reranking and Grounding",
+        storagePath: "seed/RAG301/reranking_grounding.md",
+        status: chunked
+      }
+    ]
+  )
+
+  # --- Chunks ---
+  # Tip: content is prefixed with a small breadcrumb. This helps BM25 and UI.
+  chunk_insertMany(
+    data: [
+      # CS204 / Trees
+      {
+        id: "d0000000-0000-0000-0000-000000000001",
+        courseId: "11111111-1111-1111-1111-111111111111",
+        documentId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1",
+        chunkIndex: 0,
+        title: "Binary Trees",
+        headings: "Week 3 > Trees",
+        source: "seed/CS204/week3_trees.md",
+        content: "Course: CS204 | Doc: Week 3: Trees and BSTs\n\nTrees model hierarchical structure. A binary tree node has up to two children. Height matters: balanced trees give O(log n) search depth; a degenerate tree behaves like a linked list with O(n) height."
+      },
+      {
+        id: "d0000000-0000-0000-0000-000000000002",
+        courseId: "11111111-1111-1111-1111-111111111111",
+        documentId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1",
+        chunkIndex: 1,
+        title: "BST Invariant",
+        headings: "Week 3 > BST",
+        source: "seed/CS204/week3_trees.md",
+        content: "Course: CS204 | Doc: Week 3: Trees and BSTs\n\nBinary Search Tree invariant: for any node, all keys in the left subtree are < node.key and all keys in the right subtree are > node.key. Search follows one branch per comparison, so runtime is proportional to tree height."
+      },
+      {
+        id: "d0000000-0000-0000-0000-000000000003",
+        courseId: "11111111-1111-1111-1111-111111111111",
+        documentId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1",
+        chunkIndex: 2,
+        title: "Balancing",
+        headings: "Week 3 > Balancing",
+        source: "seed/CS204/week3_trees.md",
+        content: "Course: CS204 | Doc: Week 3: Trees and BSTs\n\nSorted insert order can destroy a naive BST: the structure becomes a chain and operations degrade to O(n). Balanced BSTs (AVL / Red-Black) use rotations to keep height O(log n) regardless of insertion order."
+      },
+      {
+        id: "d0000000-0000-0000-0000-000000000004",
+        courseId: "11111111-1111-1111-1111-111111111111",
+        documentId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1",
+        chunkIndex: 3,
+        title: "Traversals",
+        headings: "Week 3 > Traversals",
+        source: "seed/CS204/week3_trees.md",
+        content: "Course: CS204 | Doc: Week 3: Trees and BSTs\n\nTree traversals: preorder (node,left,right), inorder (left,node,right), postorder (left,right,node). Inorder traversal of a BST yields keys in sorted order — a clean sanity check for your insert/delete code."
+      },
+      {
+        id: "d0000000-0000-0000-0000-000000000005",
+        courseId: "11111111-1111-1111-1111-111111111111",
+        documentId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1",
+        chunkIndex: 4,
+        title: "Complexity Sanity",
+        headings: "Week 3 > Complexity",
+        source: "seed/CS204/week3_trees.md",
+        content: "Course: CS204 | Doc: Week 3: Trees and BSTs\n\nBig-O is a growth claim. If you say O(log n), you are claiming that doubling n increases work by about a constant. Use this to sanity-check benchmarks: if runtime doubles when n doubles, you're closer to O(n) than O(log n)."
+      },
+
+      # CS204 / Hashing
+      {
+        id: "d0000000-0000-0000-0000-000000000006",
+        courseId: "11111111-1111-1111-1111-111111111111",
+        documentId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2",
+        chunkIndex: 0,
+        title: "Hash Tables",
+        headings: "Week 4 > Hash Tables",
+        source: "seed/CS204/week4_hashing.md",
+        content: "Course: CS204 | Doc: Week 4: Hash Tables\n\nA hash table maps keys to buckets using a hash function. Performance depends on collisions and load factor (n / m). With resizing, expected lookup/insert is O(1) average; without it, performance degrades as buckets fill."
+      },
+      {
+        id: "d0000000-0000-0000-0000-000000000007",
+        courseId: "11111111-1111-1111-1111-111111111111",
+        documentId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2",
+        chunkIndex: 1,
+        title: "Collision Handling",
+        headings: "Week 4 > Collisions",
+        source: "seed/CS204/week4_hashing.md",
+        content: "Course: CS204 | Doc: Week 4: Hash Tables\n\nCollision handling strategies: chaining (each bucket is a list) and open addressing (probe sequence). Chaining is simpler; open addressing keeps data contiguous but needs careful probing (linear/quadratic/double hashing)."
+      },
+      {
+        id: "d0000000-0000-0000-0000-000000000008",
+        courseId: "11111111-1111-1111-1111-111111111111",
+        documentId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2",
+        chunkIndex: 2,
+        title: "Resizing",
+        headings: "Week 4 > Resizing",
+        source: "seed/CS204/week4_hashing.md",
+        content: "Course: CS204 | Doc: Week 4: Hash Tables\n\nWhen load factor crosses a threshold (e.g., 0.75), resize and rehash. Rehashing is O(n) but amortized cost per insert is still O(1) if resizing grows the table geometrically."
+      },
+
+      # IR101 / Inverted index
+      {
+        id: "e0000000-0000-0000-0000-000000000001",
+        courseId: "22222222-2222-2222-2222-222222222222",
+        documentId: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1",
+        chunkIndex: 0,
+        title: "Inverted Index",
+        headings: "Lecture 2 > Indexing",
+        source: "seed/IR101/lec2_inverted_index.md",
+        content: "Course: IR101 | Doc: Lecture 2: Inverted Index\n\nAn inverted index maps term -> posting list. Each posting list stores docIDs (and often positions). This is why keyword search can be fast: you intersect posting lists instead of scanning every document."
+      },
+      {
+        id: "e0000000-0000-0000-0000-000000000002",
+        courseId: "22222222-2222-2222-2222-222222222222",
+        documentId: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1",
+        chunkIndex: 1,
+        title: "Tokenization",
+        headings: "Lecture 2 > Tokenization",
+        source: "seed/IR101/lec2_inverted_index.md",
+        content: "Course: IR101 | Doc: Lecture 2: Inverted Index\n\nIndexing begins with tokenization and normalization: lowercasing, stemming/lemmatization, stopword removal (optional). Choices here change both recall and precision — and can break phrase queries if you discard positions."
+      },
+
+      # IR101 / BM25
+      {
+        id: "e0000000-0000-0000-0000-000000000003",
+        courseId: "22222222-2222-2222-2222-222222222222",
+        documentId: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2",
+        chunkIndex: 0,
+        title: "BM25 Overview",
+        headings: "Lecture 3 > BM25",
+        source: "seed/IR101/lec3_bm25.md",
+        content: "Course: IR101 | Doc: Lecture 3: BM25\n\nBM25 is a ranking function that combines term frequency (TF) with inverse document frequency (IDF), with length normalization. TF has saturation: the 50th repetition of a term matters less than the 2nd."
+      },
+      {
+        id: "e0000000-0000-0000-0000-000000000004",
+        courseId: "22222222-2222-2222-2222-222222222222",
+        documentId: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2",
+        chunkIndex: 1,
+        title: "IDF Intuition",
+        headings: "Lecture 3 > IDF",
+        source: "seed/IR101/lec3_bm25.md",
+        content: "Course: IR101 | Doc: Lecture 3: BM25\n\nIDF rewards rare terms: a term that appears in almost every document is less informative. BM25’s IDF uses corpus statistics so queries like 'bm25 idf' strongly prefer documents where those terms are distinctive."
+      },
+
+      # RAG301 / Chunking
+      {
+        id: "f0000000-0000-0000-0000-000000000001",
+        courseId: "33333333-3333-3333-3333-333333333333",
+        documentId: "cccccccc-cccc-cccc-cccc-ccccccccccc1",
+        chunkIndex: 0,
+        title: "Why Chunking Matters",
+        headings: "Chunking > Motivation",
+        source: "seed/RAG301/chunking.md",
+        content: "Course: RAG301 | Doc: Chunking Strategies\n\nChunking is not clerical work; it controls what the retriever can fetch. Too large: you miss precise matches and blow the context window. Too small: you lose definitions and create orphan facts. Aim for coherent units with enough local context."
+      },
+      {
+        id: "f0000000-0000-0000-0000-000000000002",
+        courseId: "33333333-3333-3333-3333-333333333333",
+        documentId: "cccccccc-cccc-cccc-cccc-ccccccccccc1",
+        chunkIndex: 1,
+        title: "Structure-Aware Splitting",
+        headings: "Chunking > Strategy",
+        source: "seed/RAG301/chunking.md",
+        content: "Course: RAG301 | Doc: Chunking Strategies\n\nGood chunking respects structure first (headings, lists, tables, code blocks) and only then enforces token limits. A cheap win for BM25: prefix each chunk with breadcrumb headings so lexical queries match even when the body text is sparse."
+      },
+
+      # RAG301 / Reranking + Grounding
+      {
+        id: "f0000000-0000-0000-0000-000000000003",
+        courseId: "33333333-3333-3333-3333-333333333333",
+        documentId: "cccccccc-cccc-cccc-cccc-ccccccccccc2",
+        chunkIndex: 0,
+        title: "Reranking",
+        headings: "Reranking > Cross-encoders",
+        source: "seed/RAG301/reranking_grounding.md",
+        content: "Course: RAG301 | Doc: Reranking and Grounding\n\nA two-stage retriever is common: stage 1 retrieves many candidates cheaply (BM25 or vector), stage 2 reranks a smaller set with a stronger model. This reduces false positives without paying the expensive model on the full corpus."
+      },
+      {
+        id: "f0000000-0000-0000-0000-000000000004",
+        courseId: "33333333-3333-3333-3333-333333333333",
+        documentId: "cccccccc-cccc-cccc-cccc-ccccccccccc2",
+        chunkIndex: 1,
+        title: "Grounding",
+        headings: "Grounding > Behavior",
+        source: "seed/RAG301/reranking_grounding.md",
+        content: "Course: RAG301 | Doc: Reranking and Grounding\n\nGrounding means the answer should be supported by retrieved chunks. When the retriever returns weak or conflicting evidence, the assistant should say so (and ideally ask for clarification or widen retrieval), instead of hallucinating."
+      }
+    ]
+  )
+}

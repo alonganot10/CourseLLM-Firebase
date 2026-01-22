@@ -1,0 +1,73 @@
+# CourseLLM Data Connect Schema (minimal but search-friendly)
+#
+# Goal:
+# - Seed multiple courses + documents + chunks into the Data Connect Postgres
+# - Keep it simple: no embeddings yet (search-service is BM25/in-memory today)
+# - Use Firebase Auth UID as the primary key for users
+
+enum UserRole {
+  student
+  teacher
+}
+
+enum CourseStatus {
+  draft
+  published
+  archived
+}
+
+enum DocumentStatus {
+  uploaded
+  chunked
+  indexed
+}
+
+type User @table(name: "users") {
+  # Keyed by Firebase Auth UID
+  id: String! @default(expr: "auth.uid")
+  email: String @col(dataType: "varchar(320)")
+  displayName: String @col(dataType: "varchar(80)")
+  role: UserRole! @default(expr: "'student'")
+}
+
+type Course @table(name: "courses") {
+  id: UUID! @default(expr: "uuidV4()")
+  code: String! @col(dataType: "varchar(24)") @unique
+  title: String! @col(dataType: "varchar(200)")
+  description: String @col(dataType: "text")
+  status: CourseStatus! @default(expr: "'published'")
+  teacher: User!
+
+  # Useful for UI ordering/debugging
+  createdAt: Date! @default(expr: "request.time")
+}
+
+type SourceDocument @table(name: "source_documents") {
+  id: UUID! @default(expr: "uuidV4()")
+  course: Course!
+  title: String! @col(dataType: "varchar(200)")
+
+  # Either a Firebase Storage path (recommended) or a logical path used by ingestion.
+  storagePath: String! @col(dataType: "varchar(512)")
+  status: DocumentStatus! @default(expr: "'uploaded'")
+  createdAt: Date! @default(expr: "request.time")
+}
+
+type Chunk @table(name: "chunks") {
+  id: UUID! @default(expr: "uuidV4()")
+  course: Course!
+  document: SourceDocument!
+  chunkIndex: Int!
+
+  # The chunk text we will BM25 over and/or feed into the LLM.
+  content: String! @col(dataType: "text")
+
+  # Optional UI/context fields
+  source: String @col(dataType: "varchar(512)")
+  title: String @col(dataType: "varchar(200)")
+  headings: String @col(dataType: "text")
+  pageStart: Int
+  pageEnd: Int
+
+  createdAt: Date! @default(expr: "request.time")
+}

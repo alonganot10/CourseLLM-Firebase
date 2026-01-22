@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+bm25s
+PyStemmer
+httpx
+firebase-admin
+pydantic-settings
+psutil

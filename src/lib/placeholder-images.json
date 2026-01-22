@@ -1,0 +1,40 @@
+{
+  "placeholderImages": [
+    {
+      "id": "course-1",
+      "description": "A computer screen with lines of code",
+      "imageUrl": "https://images.unsplash.com/photo-1516259762381-22954d7d3ad2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxjb21wdXRlciUyMGNvZGV8ZW58MHx8fHwxNzYyNjY5MzQ5fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "computer code"
+    },
+    {
+      "id": "course-2",
+      "description": "A modern lecture hall with a presentation screen",
+      "imageUrl": "https://images.unsplash.com/photo-1519452635265-7b1fbfd1e4e0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8bGVjdHVyZSUyMGhhbGx8ZW58MHx8fHwxNzYyNTc4OTY1fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "lecture hall"
+    },
+    {
+      "id": "course-3",
+      "description": "A group of students collaborating around a laptop",
+      "imageUrl": "https://images.unsplash.com/photo-1660351174962-e2a1fbb9af09?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8c3R1ZGVudHMlMjBjb2xsYWJvcmF0aW5nfGVufDB8fHx8MTc2MjY0NjQwMnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "students collaborating"
+    },
+    {
+      "id": "course-4",
+      "description": "A diagram of a neural network",
+      "imageUrl": "https://images.unsplash.com/photo-1545987796-200677ee1011?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxuZXVyYWwlMjBuZXR3b3JrfGVufDB8fHx8MTc2MjY1NzQyM3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "neural network"
+    },
+    {
+      "id": "course-5",
+      "description": "A circuit board with glowing components",
+      "imageUrl": "https://images.unsplash.com/photo-1580584126903-c17d41830450?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxjaXJjdWl0JTIwYm9hcmR8ZW58MHx8fHwxNzYyNjQ0NzMxfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "circuit board"
+    },
+    {
+      "id": "course-6",
+      "description": "Binary code on a dark screen",
+      "imageUrl": "https://images.unsplash.com/photo-1569396116180-210c182bedb8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxiaW5hcnklMjBjb2RlfGVufDB8fHx8MTc2MjY3ODA3Nnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "binary code"
+    }
+  ]
+}

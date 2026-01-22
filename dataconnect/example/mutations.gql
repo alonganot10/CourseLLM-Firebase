@@ -1,0 +1,43 @@
+# CourseLLM example mutations
+
+mutation UpsertUser($displayName: String!, $email: String) @auth(level: USER) {
+  user_upsert(
+    data: {
+      id_expr: "auth.uid"
+      displayName: $displayName
+      email: $email
+    }
+  )
+}
+
+mutation CreateCourse(
+  $code: String!
+  $title: String!
+  $description: String
+) @auth(level: USER) {
+  # In production, restrict to teacher/custom claim.
+  course_insert(
+    data: {
+      code: $code
+      title: $title
+      description: $description
+      status: published
+      teacherId_expr: "auth.uid"
+    }
+  )
+}
+
+mutation CreateSourceDocument(
+  $courseId: UUID!
+  $title: String!
+  $storagePath: String!
+) @auth(level: USER) {
+  sourceDocument_insert(
+    data: {
+      courseId: $courseId
+      title: $title
+      storagePath: $storagePath
+      status: uploaded
+    }
+  )
+}
