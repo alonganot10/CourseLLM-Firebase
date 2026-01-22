@@ -1,0 +1,16 @@
+services:
+  emulators:
+    build:
+      context: .
+      dockerfile: docker/emulators/Dockerfile
+    working_dir: /workspace
+    volumes:
+      - ./:/workspace
+    environment:
+      - FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID:-demo-project}
+    ports:
+      - "4000:4000"   # Emulator UI (if enabled)
+      - "4400:4400"   # Emulator Hub
+      - "9099:9099"   # Auth
+      - "8081:8081"   # Firestore (your repo uses 8081)
+      - "9199:9199"   # Storage

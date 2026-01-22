@@ -1,52 +1,73 @@
-# Example schema for simple movie review app
+# CourseLLM Data Connect Schema (minimal but search-friendly)
+#
+# Goal:
+# - Seed multiple courses + documents + chunks into the Data Connect Postgres
+# - Keep it simple: no embeddings yet (search-service is BM25/in-memory today)
+# - Use Firebase Auth UID as the primary key for users
 
-# User table is keyed by Firebase Auth UID.
-type User @table {
-  # `@default(expr: "auth.uid")` sets it to Firebase Auth UID during insert and upsert.
+enum UserRole {
+  student
+  teacher
+}
+
+enum CourseStatus {
+  draft
+  published
+  archived
+}
+
+enum DocumentStatus {
+  uploaded
+  chunked
+  indexed
+}
+
+type User @table(name: "users") {
+  # Keyed by Firebase Auth UID
   id: String! @default(expr: "auth.uid")
-  username: String! @col(dataType: "varchar(50)")
-  # The `user: User!` field in the Review table generates the following one-to-many query field.
-  #  reviews_on_user: [Review!]!
-  # The `Review` join table the following many-to-many query field.
-  #  movies_via_Review: [Movie!]!
+  email: String @col(dataType: "varchar(320)")
+  displayName: String @col(dataType: "varchar(80)")
+  role: UserRole! @default(expr: "'student'")
 }
 
-# Movie is keyed by a randomly generated UUID.
-type Movie @table {
-  # If you do not pass a 'key' to `@table`, Data Connect automatically adds the following 'id' column.
-  # Feel free to uncomment and customize it.
-  #  id: UUID! @default(expr: "uuidV4()")
-  title: String!
-  imageUrl: String!
-  genre: String
+type Course @table(name: "courses") {
+  id: UUID! @default(expr: "uuidV4()")
+  code: String! @col(dataType: "varchar(24)") @unique
+  title: String! @col(dataType: "varchar(200)")
+  description: String @col(dataType: "text")
+  status: CourseStatus! @default(expr: "'published'")
+  teacher: User!
+
+  # Useful for UI ordering/debugging
+  createdAt: Date! @default(expr: "request.time")
 }
 
-# MovieMetadata is a metadata attached to a Movie.
-# Movie <-> MovieMetadata is a one-to-one relationship
-type MovieMetadata @table {
-  # @unique ensures each Movie can only one MovieMetadata.
-  movie: Movie! @unique
-  # The movie field adds the following foreign key field. Feel free to uncomment and customize it.
-  #  movieId: UUID!
-  rating: Float
-  releaseYear: Int
-  description: String
+type SourceDocument @table(name: "source_documents") {
+  id: UUID! @default(expr: "uuidV4()")
+  course: Course!
+  title: String! @col(dataType: "varchar(200)")
+
+  # Either a Firebase Storage path (recommended) or a logical path used by ingestion.
+  storagePath: String! @col(dataType: "varchar(512)")
+  status: DocumentStatus! @default(expr: "'uploaded'")
+  createdAt: Date! @default(expr: "request.time")
 }
 
-# Reviews is a join table between User and Movie.
-# It has a composite primary keys `userUid` and `movieId`.
-# A user can leave reviews for many movies. A movie can have reviews from many users.
-# User  <-> Review is a one-to-many relationship
-# Movie <-> Review is a one-to-many relationship
-# Movie <-> User is a many-to-many relationship
-type Review @table(name: "Reviews", key: ["movie", "user"]) {
-  user: User!
-  # The user field adds the following foreign key field. Feel free to uncomment and customize it.
-  #  userUid: String!
-  movie: Movie!
-  # The movie field adds the following foreign key field. Feel free to uncomment and customize it.
-  #  movieId: UUID!
-  rating: Int
-  reviewText: String
-  reviewDate: Date! @default(expr: "request.time")
+type Chunk @table(name: "chunks") {
+  id: UUID! @default(expr: "uuidV4()")
+  course: Course!
+  document: SourceDocument!
+  chunkIndex: Int!
+
+  # The chunk text we will BM25 over and/or feed into the LLM.
+  content: String! @col(dataType: "text")
+
+  # Optional UI/context fields
+  source: String @col(dataType: "varchar(512)")
+  title: String @col(dataType: "varchar(200)")
+  headings: String @col(dataType: "text")
+  pageStart: Int
+  pageEnd: Int
+
+  createdAt: Date! @default(expr: "request.time")
 }

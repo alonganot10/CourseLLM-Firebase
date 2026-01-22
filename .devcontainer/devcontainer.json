@@ -1,0 +1,21 @@
+{
+  "name": "CourseLLM-Firebase",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:20",
+  "postCreateCommand": "bash scripts/bootstrap.sh",
+  "forwardPorts": [9003, 8080, 8002],
+  "portsAttributes": {
+    "9003": { "label": "Web app (Next.js)", "onAutoForward": "openBrowser" },
+    "8080": { "label": "Search service (FastAPI)", "onAutoForward": "notify" },
+    "8002": { "label": "RAG service (FastAPI)", "onAutoForward": "notify" }
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/python:1": { "version": "3.11" }
+  },
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  }
+}

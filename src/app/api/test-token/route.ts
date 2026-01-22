@@ -41,6 +41,16 @@ export async function GET(req: Request) {
   const uid = url.searchParams.get("uid") || `test-${Math.random().toString(36).slice(2, 8)}`;
   const role = url.searchParams.get("role"); // 'student' | 'teacher'
   const createProfile = url.searchParams.get("createProfile") !== "false"; // default true
+  // Optional: allow callers to control course registration for seeded demo users.
+  // Example: ?courses=111...,222...
+  const coursesParam =
+    url.searchParams.get("courses") ||
+    url.searchParams.get("courseIds") ||
+    url.searchParams.getAll("courseId").join(",");
+  const courses = (coursesParam ? coursesParam.split(",") : [])
+    .map((s) => String(s).trim())
+    .filter(Boolean);
+  const effectiveCourses = courses.length > 0 ? courses : ["11111111-1111-1111-1111-111111111111"];
 
   try {
     const adm = initAdmin();
@@ -55,7 +65,8 @@ export async function GET(req: Request) {
           displayName: uid,
           role,
           department: "Test Dept",
-          courses: ["TST101"],
+          // Use the seeded Data Connect course UUIDs so the Search page can filter correctly.
+          courses: effectiveCourses,
           profileComplete: true,
           createdAt: adm.firestore.FieldValue.serverTimestamp(),
           updatedAt: adm.firestore.FieldValue.serverTimestamp(),

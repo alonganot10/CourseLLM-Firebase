@@ -21,6 +21,38 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+        /**
+     * @description Enforces that each user can read and write only their own top-level user profile.
+     * @path /users/{userId}
+     * @allow (create, update, delete) User with UID 'u123' can create/update/delete their own profile at /users/u123.
+     * @deny (create, update, delete) Any other UID cannot access /users/u123.
+     * @principle Enforces document ownership for user profiles.
+     */
+    match /users/{userId} {
+      function isSignedIn() {
+        return request.auth != null;
+      }
+
+      function isOwner(userId) {
+        return isSignedIn() && request.auth.uid == userId;
+      }
+
+      function isExistingOwner(userId) {
+        return isOwner(userId) && resource != null;
+      }
+
+      // A user may read their own profile
+      allow get: if isOwner(userId);
+      // Prevent listing all users
+      allow list: if false;
+
+      // A user may create/update/delete only their own document
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
+    }
+
+
     /**
      * @description Enforces that only the teacher can read and write their own profile data.
      * @path /teachers/{teacherId}

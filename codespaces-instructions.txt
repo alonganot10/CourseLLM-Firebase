@@ -1,0 +1,23 @@
+corepack enable
+pnpm install
+pnpm approve-builds # press 'a'(select all) and then press 'enter' # press 'y' & 'enter'
+
+
+cp .env.local.example .env.local # fill env.local. with keys
+pnpm dev
+
+* open a new terminal *
+npm i -g firebase-tools
+firebase emulators:start
+
+* open a new terminal *
+firebase login --no-localhost
+
+* open a new terminal *
+cd search-service
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --host 0.0.0.0 --port 8081
+
+* can open docs in the browser to see all of the endpoints with /docs*

@@ -10,6 +10,7 @@
 !.yarn/releases
 !.yarn/versions
 package-lock.json
+.pnpm-store/
 
 # testing
 /coverage
@@ -46,11 +47,34 @@ next-env.d.ts
 .env*
 !.env.local.example
 
-# firebase
-firebase-debug.log
-firestore-debug.log
-
+search-service/.venv/
 # dataconnect
 dataconnect/.dataconnect
 src/dataconnect-generated/
 src/dataconnect-admin-generated/
+
+**/__pycache__/**
+__pycache__
+*.pyc
+
+# Secrets / credentials
+secrets/
+.demo/
+*.idtoken
+
+# Python caches / coverage
+.pytest_cache/
+.coverage
+
+CourseLLM-Firebase.zip
+CourseLLM-Firebase.zip
+
+# local artifacts
+CourseLLM-Firebase.zip
+node_modules/
+.pnpm-store/
+.next/
+.demo/
+secrets/
+.env.local
+.env.*.local
